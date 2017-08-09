@@ -59,9 +59,9 @@
   var stream;
   var peerConn;
   var connectedUser;
-  var acceptData;
+  var acceptData = null;
   var configuration = {
-        "iceServers": [{ "url": "stun:stun2.1.google.com:19302" }]
+        "iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
       };
 
   export default {
@@ -117,7 +117,7 @@
         }
       },
       send(message) {
-        if (connectedUser) {
+        if (connectedUser != null) {
           message.connectedUser = connectedUser;
         }
         socket.send(JSON.stringify(message));

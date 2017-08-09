@@ -18,7 +18,6 @@ io.on('connect', function (socket) {
     switch (data.event) {
       //当有新用户加入时
       case "join":
-        console.log("User joined", data.name);
         user = data.name;
         //当昵称重复时
         if(allUsers[user]) {
@@ -28,13 +27,13 @@ io.on('connect', function (socket) {
             "success": false
           });
         } else {
+          console.log("User joined", data.name);
           //保存用户信息
-          /*allUsers.push(user);*/
           allUsers[user] = true; //true表示未通话，false表示正在通话
           allSockets[user] = socket;
           socket.name = user;
-          console.log(allUsers);
-          sendTo(io, {
+          showUserInfo(allUsers);
+          sendTo(socket, {
             "event": "join",
             "allUsers": allUsers,
             "success": true
@@ -47,12 +46,9 @@ io.on('connect', function (socket) {
         console.log("Sending offer to: ", data.connectedUser);
         //if UserB exists then send him offer details
         var conn = allSockets[data.connectedUser];
-        allUsers[data.connectedUser] = false;
+        allUsers[user] = false;
         if(conn != null) {
-          sendTo(io, {
-            "event": "show",
-            "allUsers": allUsers,
-          });
+          showUserInfo(allUsers);
           //setting that UserA connected with UserB
           socket.otherName = data.connectedUser;
           sendTo(conn, {
@@ -72,13 +68,10 @@ io.on('connect', function (socket) {
         console.log("Sending answer to: ", data.connectedUser);
         //for ex. UserB answers UserA
         var conn = allSockets[data.connectedUser];
-        allUsers[data.connectedUser] = false;
+        allUsers[user] = false;
         if(conn != null) {
-          sendTo(io, {
-            "event": "show",
-            "allUsers": allUsers,
-          });
-          socket.otherName = data.name;
+          showUserInfo(allUsers);
+          socket.otherName = data.connectedUser;
           sendTo(conn, {
             "event": "answer",
             "answer": data.answer
@@ -88,9 +81,15 @@ io.on('connect', function (socket) {
 
       case "candidate":
         console.log("Sending candidate to:", data.connectedUser);
-        var conn = allSockets[data.connectedUser];
-        if(conn != null) {
-          sendTo(conn, {
+        var conn1 = allSockets[data.connectedUser];
+        var conn2 = allSockets[socket.otherName];
+        if(conn1 != null) {
+          sendTo(conn1, {
+            "event": "candidate",
+            "candidate": data.candidate
+          });
+        } else {
+          sendTo(conn2, {
             "event": "candidate",
             "candidate": data.candidate
           });
@@ -100,15 +99,12 @@ io.on('connect', function (socket) {
       case "leave":
         console.log("Disconnecting from", data.connectedUser);
         var conn = allSockets[data.connectedUser];
-        allUsers[data.connectedUser] = true;
         allUsers[socket.name] = true;
+        allUsers[data.connectedUser] = true;
         socket.otherName = null;
         //notify the other user so he can disconnect his peer connection
         if(conn != null) {
-          sendTo(io, {
-            "event": "show",
-            "allUsers": allUsers,
-          });
+          showUserInfo(allUsers);
           sendTo(conn, {
             event: "leave"
           });
@@ -121,10 +117,7 @@ io.on('connect', function (socket) {
     if(socket.name) {
       delete allUsers[socket.name];
       delete allSockets[socket.name];
-      sendTo(io, {
-        "event": "show",
-        "allUsers": allUsers,
-      });
+      showUserInfo(allUsers);
       if(socket.otherName) {
         console.log("Disconnecting from ", socket.otherName);
         var conn = allSockets[socket.otherName];
@@ -139,6 +132,13 @@ io.on('connect', function (socket) {
     }
   });
 });
+
+function showUserInfo(allUsers) {
+  sendTo(io, {
+    "event": "show",
+    "allUsers": allUsers,
+  });
+}
 
 function sendTo(connection, message) {
   connection.send(message);

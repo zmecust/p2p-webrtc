@@ -55,13 +55,13 @@
 </template>
 
 <script>
-  const socket = io.connect('http://localhost:3000');
+  const socket = io.connect('https://laravue.org:443');
   var stream;
   var peerConn;
   var connectedUser;
   var acceptData = null;
   var configuration = {
-        "iceServers": [{ "url": "stun:stun.l.google.com:19302" }]
+        "iceServers": [{ "url": "stun:stun.ekiga.net" }]
       };
 
   export default {
@@ -168,7 +168,7 @@
       call() {
         var self = this;
         if (this.call_username.length > 0) {
-          if (this.users[this.call_username] === true) {
+         // if (this.users[this.call_username] === true) {
             connectedUser = this.call_username;
             // create an offer
             peerConn.createOffer(function (offer) {
@@ -180,9 +180,9 @@
             }, function (error) {
               alert("Error when creating an offer");
             });
-          } else {
-            alert("The current user is calling");
-          }
+         // } else {
+         //   alert("The current user is calling");
+         // }
         } else {
           alert("Ooops...this username cannot be empty, please try again");
         }

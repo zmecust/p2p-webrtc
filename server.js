@@ -1,8 +1,28 @@
-var http = require('http').Server();
+var express = require('express');
+var app = express();
+var https = require('https');
 var fs = require('fs');
 var IO = require('socket.io');
 
-var io = IO(http);
+var options = {
+  key: fs.readFileSync('/etc/letsencrypt/live/laravue.org/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/laravue.org/cert.pem'),
+  passphrase: '123456789'
+};
+
+app.use(express.static('dist'));
+
+app.use(function(req, res, next) {
+  if(req.headers['x-forwarded-proto']==='http') {
+    return res.redirect(['https://', req.get('Host'), req.url].join(''));
+  }
+  next();
+});
+
+var server = https.createServer(options, app).listen(443);
+console.log("The HTTPS server is up and running");
+
+var io = IO(server);
 console.log("Socket Secure server is up and running.");
 
 // 所有用户名单
@@ -143,5 +163,3 @@ function showUserInfo(allUsers) {
 function sendTo(connection, message) {
   connection.send(message);
 }
-
-http.listen(3000);

@@ -55,13 +55,13 @@
 </template>
 
 <script>
-  const socket = io.connect('https://laravue.org:443');
+  const socket = io.connect('https://laravue.xyz:443');
   var stream;
   var peerConn;
   var connectedUser;
   var acceptData = null;
   var configuration = {
-        "iceServers": [{ "url": "stun:stun.ekiga.net" }]
+        "iceServers": [{ "url": "turn:115.28.170.217:3478", "credential": "zmecust", "username": "zmecust" }]
       };
 
   export default {

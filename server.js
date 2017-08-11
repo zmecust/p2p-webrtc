@@ -5,8 +5,8 @@ var fs = require('fs');
 var IO = require('socket.io');
 
 var options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/laravue.org/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/laravue.org/cert.pem'),
+  key: fs.readFileSync('/etc/letsencrypt/live/laravue.xyz/privkey.pem'),
+  cert: fs.readFileSync('/etc/letsencrypt/live/laravue.xyz/cert.pem'),
   passphrase: '123456789'
 };
 

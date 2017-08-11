@@ -55,10 +55,10 @@
 </template>
 
 <script>
-  const socket = io.connect('https://laravue.xyz:443');
+  const socket = io.connect('http://localhost:3000');
   var stream;
   var peerConn;
-  var connectedUser;
+  var connectedUser = null;
   var acceptData = null;
   var configuration = {
         "iceServers": [{ "url": "turn:115.28.170.217:3478", "credential": "zmecust", "username": "zmecust" }]
@@ -231,8 +231,8 @@
         peerConn.onicecandidate = null;
         peerConn.onaddstream = null;
         if (peerConn.signalingState == 'closed') {
-            this.createPeerConnect();
-            this.prepare();
+          this.createPeerConnect();
+          this.prepare();
         }
       },
       closePreview() {

@@ -161,12 +161,14 @@
         };
         peerConn.onicecandidate = function (event) {
           console.log(event.target.iceGatheringState);
-          if (event.candidate) {
-            self.send({
-              event: "candidate",
-              candidate: event.candidate
-            });
-          }
+          setTimeout(function() {
+            if (event.candidate) {
+              self.send({
+                event: "candidate",
+                candidate: event.candidate
+              });
+            }
+          })
         };
       },
       call() {

@@ -160,6 +160,7 @@
           self.remote_video = window.URL.createObjectURL(e.stream);
         };
         peerConn.onicecandidate = function (event) {
+          console.log(event.target.iceGatheringState);
           if (event.candidate) {
             self.send({
               event: "candidate",

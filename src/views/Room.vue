@@ -60,7 +60,7 @@
   window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
   window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
-  const socket = io.connect('http://localhost:3000');
+  const socket = io.connect('https://laravue.xyz:443');
   var stream;
   var peerConn;
   var connectedUser = null;

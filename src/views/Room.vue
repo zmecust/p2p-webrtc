@@ -55,13 +55,20 @@
 </template>
 
 <script>
+  navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+  window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+  window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
+  window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
+
   const socket = io.connect('http://localhost:3000');
   var stream;
   var peerConn;
   var connectedUser = null;
-  var acceptData = null;
   var configuration = {
-        "iceServers": [{ "url": "turn:115.28.170.217:3478", "credential": "zmecust", "username": "zmecust" }]
+        "iceServers": [
+          { "url": "stun:stun.l.google.com:19302" },
+          { "url": "turn:115.28.170.217:3478", "credential": "zmecust", "username": "zmecust" }
+        ]
       };
 
   export default {
@@ -86,9 +93,14 @@
           case "join":
           this.handleLogin(data);
           break;
+          case "call":
+          this.handleCall(data);
+          break;
+          case "accept":
+          this.handleAccept();
+          break;
           case "offer":
-          acceptData = data;
-          this.handleOffer();
+          this.handleOffer(data);
           break;
           case "candidate":
           this.handleCandidate(data);
@@ -129,19 +141,24 @@
         } else {
           this.show = false;
           this.users = data.allUsers;
-          this.createPeerConnect();
-          this.prepare();
+          this.initCreate();
         }
       },
-      createPeerConnect() {
+      initCreate() {
         let self = this;
-        //using Google public stun server
-        peerConn = new webkitRTCPeerConnection(configuration);
-        //when a remote user adds stream to the peer connection, we display it
+        peerConn = new RTCPeerConnection(configuration);
+        navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
+        function gotStream(stream) {
+          //displaying local video stream on the page
+          self.local_video = window.URL.createObjectURL(stream);
+          peerConn.addStream(stream);
+        }
+        function logError(error) {
+          console.log(error);
+        }
         peerConn.onaddstream = function (e) {
           self.remote_video = window.URL.createObjectURL(e.stream);
         };
-        // Setup ice handling
         peerConn.onicecandidate = function (event) {
           if (event.candidate) {
             self.send({
@@ -151,48 +168,46 @@
           }
         };
       },
-      prepare() {
-        let self = this;
-        /*----------Starting a peer connection----------*/
-        //getting local video stream
-        navigator.webkitGetUserMedia({ video: true, audio: true }, function (myStream) {
-          stream = myStream;
-          //displaying local video stream on the page
-          self.local_video = window.URL.createObjectURL(stream);
-          // setup stream listening
-          peerConn.addStream(stream);
-        }, function (error) {
-          console.log(error);
-        });
-      },
       call() {
-        var self = this;
         if (this.call_username.length > 0) {
-         // if (this.users[this.call_username] === true) {
+          if (this.users[this.call_username] === true) {
             connectedUser = this.call_username;
-            // create an offer
-            peerConn.createOffer(function (offer) {
-              self.send({
-                event: "offer",
-                offer: offer
-              });
-              peerConn.setLocalDescription(offer);
-            }, function (error) {
-              alert("Error when creating an offer");
+            this.send({
+                event: "call"
             });
-         // } else {
-         //   alert("The current user is calling");
-         // }
+          } else {
+            alert("The current user is calling, try another");
+          }
         } else {
           alert("Ooops...this username cannot be empty, please try again");
         }
       },
-      handleOffer() {
+      handleCall(data) {
         this.accept_video = true;
+        connectedUser = data.name;
       },
       accept() {
+        this.send({
+          event: "accept",
+          accept: true
+        });
+        this.accept_video = false;
+      },
+      handleAccept() {
         var self = this;
-        var data = acceptData;
+        // create an offer
+        peerConn.createOffer(function (offer) {
+          self.send({
+            event: "offer",
+            offer: offer
+          });
+          peerConn.setLocalDescription(offer);
+        }, function (error) {
+          alert("Error when creating an offer");
+        });
+      },
+      handleOffer(data) {
+        var self = this;
         connectedUser = data.name;
         peerConn.setRemoteDescription(new RTCSessionDescription(data.offer));
         //create an answer to an offer
@@ -203,9 +218,8 @@
             answer: answer
           });
         }, function (error) {
-          alert("Error when creating an answer");
+            alert("Error when creating an answer");
         });
-        this.accept_video = false;
       },
       handleMsg(data) {
         console.log(data.message);
@@ -231,8 +245,7 @@
         peerConn.onicecandidate = null;
         peerConn.onaddstream = null;
         if (peerConn.signalingState == 'closed') {
-          this.createPeerConnect();
-          this.prepare();
+          this.initCreate();
         }
       },
       closePreview() {

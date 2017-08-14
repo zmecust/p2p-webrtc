@@ -63,6 +63,14 @@ io.on('connect', function (socket) {
         }
         break;
 
+      case "call":
+        var conn = allSockets[data.connectedUser];
+        sendTo(conn, {
+          "event": "call",
+          "name": socket.name
+        });
+        break;
+
       case "offer":
         //for example: UserA wants to call UserB
         console.log("Sending offer to: ", data.connectedUser);
@@ -83,6 +91,17 @@ io.on('connect', function (socket) {
             "event": "msg",
             "message": "Not found this name"
           });
+        }
+        break;
+
+      case "accept":
+        if (data.accept) {
+          var conn = allSockets[data.connectedUser];
+          if(conn != null) {
+            sendTo(conn, {
+              "event": "accept",
+            });
+          }
         }
         break;
 

@@ -1,12 +1,12 @@
-/*var express = require('express');
-var app = express();*/
-var http = require('http').Server();
+var express = require('express');
+var app = express();
+var https = require('https');
 var fs = require('fs');
 var IO = require('socket.io');
 
-/*var options = {
-  key: fs.readFileSync('/etc/letsencrypt/live/laravue.xyz/privkey.pem'),
-  cert: fs.readFileSync('/etc/letsencrypt/live/laravue.xyz/cert.pem'),
+var options = {
+  key: fs.readFileSync('./ssl/key.pem'),
+  cert: fs.readFileSync('./ssl/cert.pem'),
   passphrase: '123456789'
 };
 
@@ -20,12 +20,10 @@ app.use(function(req, res, next) {
 });
 
 var server = https.createServer(options, app).listen(443);
-console.log("The HTTPS server is up and running");*/
+console.log("The HTTPS server is up and running");
 
-var io = IO(http);
+var io = IO(server);
 console.log("Socket Secure server is up and running.");
-
-http.listen(3000);
 
 // 所有用户名单
 var allUsers = {};

@@ -29,8 +29,8 @@
                         <div class="col-md-12">
                             <input class="form-control" type="text" v-model="call_username" placeholder="username to call"/>
                             <br>
-                            <button class="btn-success btn" @click="call">Call</button>
-                            <button class="btn-danger btn" @click="hangUp">Hang Up</button>
+                            <button class="btn-success btn" :disabled="!users[user_name]" @click="call">Call</button>
+                            <button class="btn-danger btn" :disabled="users[user_name]" @click="hangUp">Hang Up</button>
                         </div>
                     </div>
                 </div>
@@ -46,6 +46,7 @@
                     <div class="preview-body">
                         <h4>您有视频邀请，是否接受?</h4>
                         <button class="btn-success btn" @click="accept">接受</button>
+                        <button class="btn-danger btn" style="margin-right: 70px" @click="reject">拒绝</button>
                     </div>
                     <div class="confirm" @click="closePreview">×</div>
                 </div>
@@ -60,7 +61,7 @@
   window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
   window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
-  const socket = io.connect('https://laravue.xyz:443');
+  const socket = io.connect('http://localhost:3000');
   var stream;
   var peerConn;
   var connectedUser = null;
@@ -80,7 +81,7 @@
         call_username: '',
         local_video: '',
         remote_video: '',
-        accept_video: false
+        accept_video: false,
       }
     },
     mounted() {
@@ -97,7 +98,7 @@
           this.handleCall(data);
           break;
           case "accept":
-          this.handleAccept();
+          this.handleAccept(data);
           break;
           case "offer":
           this.handleOffer(data);
@@ -189,6 +190,13 @@
         this.accept_video = true;
         connectedUser = data.name;
       },
+      reject() {
+        this.send({
+          event: "accept",
+          accept: false
+        });
+        this.accept_video = false;
+      },
       accept() {
         this.send({
           event: "accept",
@@ -196,18 +204,23 @@
         });
         this.accept_video = false;
       },
-      handleAccept() {
-        var self = this;
-        // create an offer
-        peerConn.createOffer(function (offer) {
-          self.send({
-            event: "offer",
-            offer: offer
+      handleAccept(data) {
+        if (data.accept) {
+          var self = this;
+          // create an offer
+          peerConn.createOffer(function (offer) {
+            self.send({
+              event: "offer",
+              offer: offer
+            });
+            peerConn.setLocalDescription(offer);
+          }, function (error) {
+            alert("Error when creating an offer");
           });
-          peerConn.setLocalDescription(offer);
-        }, function (error) {
-          alert("Error when creating an offer");
-        });
+
+        } else {
+          alert("对方已拒绝");
+        }
       },
       handleOffer(data) {
         var self = this;

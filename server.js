@@ -1,10 +1,10 @@
-var express = require('express');
-var app = express();
-var https = require('https');
+/*var express = require('express');
+var app = express();*/
+var http = require('http').Server();
 var fs = require('fs');
 var IO = require('socket.io');
 
-var options = {
+/*var options = {
   key: fs.readFileSync('/etc/letsencrypt/live/laravue.xyz/privkey.pem'),
   cert: fs.readFileSync('/etc/letsencrypt/live/laravue.xyz/cert.pem'),
   passphrase: '123456789'
@@ -20,11 +20,12 @@ app.use(function(req, res, next) {
 });
 
 var server = https.createServer(options, app).listen(443);
-console.log("The HTTPS server is up and running");
+console.log("The HTTPS server is up and running");*/
 
-var io = IO(server);
+var io = IO(http);
 console.log("Socket Secure server is up and running.");
 
+http.listen(3000);
 
 // 所有用户名单
 var allUsers = {};
@@ -94,11 +95,18 @@ io.on('connect', function (socket) {
         break;
 
       case "accept":
-        if (data.accept) {
-          var conn = allSockets[data.connectedUser];
-          if(conn != null) {
+        var conn = allSockets[data.connectedUser];
+        if(conn != null) {
+          if (data.accept) {
             sendTo(conn, {
               "event": "accept",
+              "accept": true
+            });
+          } else {
+            allUsers[data.connectedUser] = true;
+            sendTo(conn, {
+              "event": "accept",
+              "accept": false
             });
           }
         }

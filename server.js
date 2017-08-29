@@ -1,25 +1,25 @@
 var express = require('express');
 var app = express();
-var https = require('https');
+var http = require('http');
 var fs = require('fs');
 var IO = require('socket.io');
 
-var options = {
+/*var options = {
   key: fs.readFileSync('./ssl/key.pem'),
   cert: fs.readFileSync('./ssl/cert.pem'),
   passphrase: '123456789'
-};
+};*/
 
 app.use(express.static('dist'));
 
-app.use(function(req, res, next) {
+/*app.use(function(req, res, next) {
   if(req.headers['x-forwarded-proto']==='http') {
     return res.redirect(['https://', req.get('Host'), req.url].join(''));
   }
   next();
-});
+});*/
 
-var server = https.createServer(options, app).listen(443);
+var server = http.createServer(app).listen(3000);
 console.log("The HTTPS server is up and running");
 
 var io = IO(server);

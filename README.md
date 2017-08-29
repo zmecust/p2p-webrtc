@@ -4,7 +4,7 @@
 
 ## 演示地址
 
-- https://laravue.xyz:3000
+- https://laravue.xyz
 
 ## 项目概述
 

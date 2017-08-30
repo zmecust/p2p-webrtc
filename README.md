@@ -52,6 +52,27 @@ server {
 }
 ```
 
+## Supervisor 守护进程
+
+node 服务由 Supervisor 启动并维护，设置参数如下：
+
+```
+[program:WebRTC]
+process_name=%(program_name)s
+command=node /var/www/html/Vue-WebRTC/server.js --daemon  # node 服务所在地址
+autostart=true
+autorestart=true
+user=root
+numprocs=1
+redirect_stderr=false
+stdout_logfile=/var/log/supervisor/WebRTC.log
+```
+对应的需要修改 server.js 的 `app.use(express.static('/var/www/html/Vue-WebRTC/dist'));` //客户端所在地址，修改成绝对路径，否则会报 404 错误
+
+- supervisord -c /etc/supervisor/supervisord.conf //起服务，注意 supervisor 配置文件所在目录
+- supervisord shutdown //关闭服务 
+- supervisord reload //重启服务 
+
 ## 说明
 
 - 关键是两个文件：server.js 为消息分发的信令服务; 客户端首页面在 `src/view/Room.vue`

@@ -68,6 +68,7 @@ redirect_stderr=false
 stdout_logfile=/var/log/supervisor/WebRTC.log
 ```
 如果启动失败，可能需要执行：`unlink /run/supervisor.sock`
+
 对应的需要修改 server.js 的 `app.use(express.static('/var/www/html/Vue-WebRTC/dist'));` //客户端所在地址，修改成绝对路径，否则会报 404 错误
 
 - supervisord -c /etc/supervisor/supervisord.conf //起服务，注意 supervisor 配置文件所在目录

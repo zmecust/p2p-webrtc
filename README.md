@@ -9,6 +9,7 @@
 ## 项目概述
 
 - 实现通过拨号方式建立点对点视频通话连接
+- 详情请参考 [https://laravue.org/#/articles/22](https://laravue.org/#/articles/22)
 
 ## 安装
 
@@ -37,10 +38,6 @@ server {
         ssl_session_tickets off;
 
         server_name '你的域名';
-        
-        if ($scheme = http) {
-                return 301 https://$server_name$request_uri;
-        }
 
         location / {
                 proxy_pass    http://127.0.0.1:3000;

@@ -4,7 +4,7 @@
 
 ## 演示地址
 
-- https://laravue.xyz
+- https://webrtc.laravue.org
 
 ## 项目概述
 
@@ -56,7 +56,7 @@ node 服务由 Supervisor 启动并维护，设置参数如下：
 ```
 [program:WebRTC]
 process_name=%(program_name)s
-command=node /var/www/html/Vue-WebRTC/server.js --daemon  # node 服务所在地址
+command=node /var/www/html/p2p-webrtc/server.js --daemon  # node 服务所在地址
 autostart=true
 autorestart=true
 user=root
@@ -66,7 +66,7 @@ stdout_logfile=/var/log/supervisor/WebRTC.log
 ```
 如果启动失败，可能需要执行：`unlink /run/supervisor.sock`
 
-对应的需要修改 server.js 的 `app.use(express.static('/var/www/html/Vue-WebRTC/dist'));` //客户端所在地址，修改成绝对路径，否则会报 404 错误
+对应的需要修改 server.js 的 `app.use(express.static('/var/www/html/p2p-webrtc/dist'));` //客户端所在地址，修改成绝对路径，否则会报 404 错误
 
 - supervisord -c /etc/supervisor/supervisord.conf //起服务，注意 supervisor 配置文件所在目录
 - supervisord shutdown //关闭服务 

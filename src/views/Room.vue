@@ -154,7 +154,6 @@ export default {
       socket.send(JSON.stringify(message));
     },
     handleLogin(data) {
-      let self = this;
       if (data.success === false) {
         alert("Ooops...please try a different username");
       } else {
@@ -164,7 +163,26 @@ export default {
       }
     },
     initCreate() {
-      let self = this;
+      // navigator.mediaDevices
+      //   .getUserMedia({ audio: true, video: true })
+      //   .then(e => {
+      //     var video = document.getElementById("localVideo");
+      //     // 旧的浏览器可能没有srcObject
+      //     if ("srcObject" in video) {
+      //       video.srcObject = e;
+      //     } else {
+      //       // 防止再新的浏览器里使用它，应为它已经不再支持了
+      //       video.src = window.URL.createObjectURL(e);
+      //     }
+      //     stream = e;
+      //     video.onloadedmetadata = function(e) {
+      //       video.play();
+      //     };
+      //   })
+      //   .catch(err => {
+      //     console.log(err.name + ": " + err.message);
+      //   });
+      const self = this;
       navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
       function gotStream(e) {
         //displaying local video stream on the page
@@ -178,23 +196,8 @@ export default {
     call() {
       if (this.call_username.length > 0) {
         if (this.users[this.call_username] === true) {
-          peerConn = new RTCPeerConnection(configuration);
-          peerConn.addStream(stream);
-          peerConn.onaddstream = function(e) {
-            self.remote_video = window.URL.createObjectURL(e.stream);
-          };
-          peerConn.onicecandidate = function(event) {
-            console.log(event.target.iceGatheringState);
-            setTimeout(function() {
-              if (event.candidate) {
-                self.send({
-                  event: "candidate",
-                  candidate: event.candidate
-                });
-              }
-            });
-          };
           connectedUser = this.call_username;
+          this.createConnection();
           this.send({
             event: "call"
           });
@@ -204,6 +207,23 @@ export default {
       } else {
         alert("Ooops...this username cannot be empty, please try again");
       }
+    },
+    createConnection() {
+      peerConn = new RTCPeerConnection(configuration);
+      peerConn.addStream(stream);
+      peerConn.onaddstream = e => {
+        this.remote_video = window.URL.createObjectURL(e.stream);
+      };
+      peerConn.onicecandidate = event => {
+        setTimeout(() => {
+          if (event.candidate) {
+            this.send({
+              event: "candidate",
+              candidate: event.candidate
+            });
+          }
+        });
+      };
     },
     handleCall(data) {
       this.accept_video = true;
@@ -225,17 +245,16 @@ export default {
     },
     handleAccept(data) {
       if (data.accept) {
-        var self = this;
         // create an offer
         peerConn.createOffer(
-          function(offer) {
-            self.send({
+          offer => {
+            this.send({
               event: "offer",
               offer: offer
             });
             peerConn.setLocalDescription(offer);
           },
-          function(error) {
+          error => {
             alert("Error when creating an offer");
           }
         );
@@ -244,35 +263,19 @@ export default {
       }
     },
     handleOffer(data) {
-      var self = this;
       connectedUser = data.name;
-      peerConn = new RTCPeerConnection(configuration);
-      peerConn.addStream(stream);
-      peerConn.onaddstream = function(e) {
-        self.remote_video = window.URL.createObjectURL(e.stream);
-      };
-      peerConn.onicecandidate = function(event) {
-        console.log(event.target.iceGatheringState);
-        setTimeout(function() {
-          if (event.candidate) {
-            self.send({
-              event: "candidate",
-              candidate: event.candidate
-            });
-          }
-        });
-      };
+      this.createConnection();
       peerConn.setRemoteDescription(new RTCSessionDescription(data.offer));
       //create an answer to an offer
       peerConn.createAnswer(
-        function(answer) {
+        answer => {
           peerConn.setLocalDescription(answer);
-          self.send({
+          this.send({
             event: "answer",
             answer: answer
           });
         },
-        function(error) {
+        error => {
           alert("Error when creating an answer");
         }
       );

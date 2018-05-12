@@ -56,277 +56,318 @@
 </template>
 
 <script>
-  navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
-  window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
-  window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
-  window.RTCSessionDescription = window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
+navigator.getUserMedia =
+  navigator.getUserMedia ||
+  navigator.mozGetUserMedia ||
+  navigator.webkitGetUserMedia;
+window.RTCPeerConnection =
+  window.RTCPeerConnection ||
+  window.mozRTCPeerConnection ||
+  window.webkitRTCPeerConnection;
+window.RTCIceCandidate =
+  window.RTCIceCandidate ||
+  window.mozRTCIceCandidate ||
+  window.webkitRTCIceCandidate;
+window.RTCSessionDescription =
+  window.RTCSessionDescription ||
+  window.mozRTCSessionDescription ||
+  window.webkitRTCSessionDescription;
 
-  const socket = io.connect('http://localhost');
-  var stream;
-  var peerConn;
-  var connectedUser = null;
-  var configuration = {
-        "iceServers": [
-          { "url": "turn:115.28.170.217:3478", "credential": "zmecust", "username": "zmecust" }
-        ]
-      };
+const socket = io.connect("http://localhost:3000");
+var stream;
+var peerConn;
+var connectedUser = null;
+var configuration = {
+  iceServers: [
+    {
+      url: "turn:115.28.170.217:3478",
+      credential: "zmecust",
+      username: "zmecust"
+    }
+  ]
+};
 
-  export default {
-    data() {
-      return {
-        user_name: '',
-        show: true,
-        users: '',
-        call_username: '',
-        local_video: '',
-        remote_video: '',
-        accept_video: false,
-      }
-    },
-    mounted() {
-      socket.on('message', function (data) {
+export default {
+  data() {
+    return {
+      user_name: "",
+      show: true,
+      users: "",
+      call_username: "",
+      local_video: "",
+      remote_video: "",
+      accept_video: false
+    };
+  },
+  mounted() {
+    socket.on(
+      "message",
+      function(data) {
         console.log(data);
         switch (data.event) {
           case "show":
-          this.users = data.allUsers;
-          break;
+            this.users = data.allUsers;
+            break;
           case "join":
-          this.handleLogin(data);
-          break;
+            this.handleLogin(data);
+            break;
           case "call":
-          this.handleCall(data);
-          break;
+            this.handleCall(data);
+            break;
           case "accept":
-          this.handleAccept(data);
-          break;
+            this.handleAccept(data);
+            break;
           case "offer":
-          this.handleOffer(data);
-          break;
+            this.handleOffer(data);
+            break;
           case "candidate":
-          this.handleCandidate(data);
-          break;
+            this.handleCandidate(data);
+            break;
           case "msg":
-          this.handleMsg(data);
-          break;
+            this.handleMsg(data);
+            break;
           case "answer":
-          this.handleAnswer(data);
-          break;
+            this.handleAnswer(data);
+            break;
           case "leave":
-          this.handleLeave();
-          break;
+            this.handleLeave();
+            break;
           default:
-          break;
+            break;
+        }
+      }.bind(this)
+    );
+  },
+  methods: {
+    submit() {
+      if (this.user_name != "") {
+        this.send({
+          event: "join",
+          name: this.user_name
+        });
       }
-      }.bind(this));
     },
-    methods: {
-      submit() {
-        if (this.user_name != '') {
-          this.send({
-            event: "join",
-            name: this.user_name,
-          });
-        }
-      },
-      send(message) {
-        if (connectedUser != null) {
-          message.connectedUser = connectedUser;
-        }
-        socket.send(JSON.stringify(message));
-      },
-      handleLogin(data) {
-        let self = this;
-        if (data.success === false) {
-          alert("Ooops...please try a different username");
-        } else {
-          this.show = false;
-          this.users = data.allUsers;
-          this.initCreate();
-        }
-      },
-      initCreate() {
-        let self = this;
-        peerConn = new RTCPeerConnection(configuration);
-        navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
-        function gotStream(stream) {
-          //displaying local video stream on the page
-          self.local_video = window.URL.createObjectURL(stream);
+    send(message) {
+      if (connectedUser != null) {
+        message.connectedUser = connectedUser;
+      }
+      socket.send(JSON.stringify(message));
+    },
+    handleLogin(data) {
+      let self = this;
+      if (data.success === false) {
+        alert("Ooops...please try a different username");
+      } else {
+        this.show = false;
+        this.users = data.allUsers;
+        this.initCreate();
+      }
+    },
+    initCreate() {
+      let self = this;
+      navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
+      function gotStream(e) {
+        //displaying local video stream on the page
+        self.local_video = window.URL.createObjectURL(e);
+        stream = e;
+      }
+      function logError(error) {
+        console.log(error);
+      }
+    },
+    call() {
+      if (this.call_username.length > 0) {
+        if (this.users[this.call_username] === true) {
+          peerConn = new RTCPeerConnection(configuration);
           peerConn.addStream(stream);
-        }
-        function logError(error) {
-          console.log(error);
-        }
-        peerConn.onaddstream = function (e) {
-          self.remote_video = window.URL.createObjectURL(e.stream);
-        };
-        peerConn.onicecandidate = function (event) {
-          console.log(event.target.iceGatheringState);
-          setTimeout(function() {
-            if (event.candidate) {
-              self.send({
-                event: "candidate",
-                candidate: event.candidate
-              });
-            }
-          })
-        };
-      },
-      call() {
-        if (this.call_username.length > 0) {
-          if (this.users[this.call_username] === true) {
-            connectedUser = this.call_username;
-            this.send({
-                event: "call"
+          peerConn.onaddstream = function(e) {
+            self.remote_video = window.URL.createObjectURL(e.stream);
+          };
+          peerConn.onicecandidate = function(event) {
+            console.log(event.target.iceGatheringState);
+            setTimeout(function() {
+              if (event.candidate) {
+                self.send({
+                  event: "candidate",
+                  candidate: event.candidate
+                });
+              }
             });
-          } else {
-            alert("The current user is calling, try another");
-          }
+          };
+          connectedUser = this.call_username;
+          this.send({
+            event: "call"
+          });
         } else {
-          alert("Ooops...this username cannot be empty, please try again");
+          alert("The current user is calling, try another");
         }
-      },
-      handleCall(data) {
-        this.accept_video = true;
-        connectedUser = data.name;
-      },
-      reject() {
-        this.send({
-          event: "accept",
-          accept: false
-        });
-        this.accept_video = false;
-      },
-      accept() {
-        this.send({
-          event: "accept",
-          accept: true
-        });
-        this.accept_video = false;
-      },
-      handleAccept(data) {
-        if (data.accept) {
-          var self = this;
-          // create an offer
-          peerConn.createOffer(function (offer) {
+      } else {
+        alert("Ooops...this username cannot be empty, please try again");
+      }
+    },
+    handleCall(data) {
+      this.accept_video = true;
+      connectedUser = data.name;
+    },
+    reject() {
+      this.send({
+        event: "accept",
+        accept: false
+      });
+      this.accept_video = false;
+    },
+    accept() {
+      this.send({
+        event: "accept",
+        accept: true
+      });
+      this.accept_video = false;
+    },
+    handleAccept(data) {
+      if (data.accept) {
+        var self = this;
+        // create an offer
+        peerConn.createOffer(
+          function(offer) {
             self.send({
               event: "offer",
               offer: offer
             });
             peerConn.setLocalDescription(offer);
-          }, function (error) {
+          },
+          function(error) {
             alert("Error when creating an offer");
-          });
-
-        } else {
-          alert("对方已拒绝");
-        }
-      },
-      handleOffer(data) {
-        var self = this;
-        connectedUser = data.name;
-        peerConn.setRemoteDescription(new RTCSessionDescription(data.offer));
-        //create an answer to an offer
-        peerConn.createAnswer(function (answer) {
+          }
+        );
+      } else {
+        alert("对方已拒绝");
+      }
+    },
+    handleOffer(data) {
+      var self = this;
+      connectedUser = data.name;
+      peerConn = new RTCPeerConnection(configuration);
+      peerConn.addStream(stream);
+      peerConn.onaddstream = function(e) {
+        self.remote_video = window.URL.createObjectURL(e.stream);
+      };
+      peerConn.onicecandidate = function(event) {
+        console.log(event.target.iceGatheringState);
+        setTimeout(function() {
+          if (event.candidate) {
+            self.send({
+              event: "candidate",
+              candidate: event.candidate
+            });
+          }
+        });
+      };
+      peerConn.setRemoteDescription(new RTCSessionDescription(data.offer));
+      //create an answer to an offer
+      peerConn.createAnswer(
+        function(answer) {
           peerConn.setLocalDescription(answer);
           self.send({
             event: "answer",
             answer: answer
           });
-        }, function (error) {
-            alert("Error when creating an answer");
-        });
-      },
-      handleMsg(data) {
-        console.log(data.message);
-      },
-      handleAnswer(data) {
-        peerConn.setRemoteDescription(new RTCSessionDescription(data.answer));
-      },
-      handleCandidate(data) {
-        //ClientB通过PeerConnection的AddIceCandidate方法保存起来
-        peerConn.addIceCandidate(new RTCIceCandidate(data.candidate));
-      },
-      hangUp() {
-        this.send({
-          event: "leave"
-        });
-        this.handleLeave();
-      },
-      handleLeave() {
-        alert("通话已结束");
-        connectedUser = null;
-        this.remote_video = "";
-        peerConn.close();
-        peerConn.onicecandidate = null;
-        peerConn.onaddstream = null;
-        if (peerConn.signalingState == 'closed') {
-          this.initCreate();
+        },
+        function(error) {
+          alert("Error when creating an answer");
         }
-      },
-      closePreview() {
-        this.accept_video = false;
+      );
+    },
+    handleMsg(data) {
+      console.log(data.message);
+    },
+    handleAnswer(data) {
+      peerConn.setRemoteDescription(new RTCSessionDescription(data.answer));
+    },
+    handleCandidate(data) {
+      //ClientB通过PeerConnection的AddIceCandidate方法保存起来
+      peerConn.addIceCandidate(new RTCIceCandidate(data.candidate));
+    },
+    hangUp() {
+      this.send({
+        event: "leave"
+      });
+      this.handleLeave();
+    },
+    handleLeave() {
+      alert("通话已结束");
+      connectedUser = null;
+      this.remote_video = "";
+      peerConn.close();
+      peerConn.onicecandidate = null;
+      peerConn.onaddstream = null;
+      if (peerConn.signalingState == "closed") {
+        this.initCreate();
       }
+    },
+    closePreview() {
+      this.accept_video = false;
     }
   }
+};
 </script>
 
 <style>
-    .preview {
-        position: fixed;
-        z-index: 9998;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background-color: rgba(0, 0, 0, .5);
-        display: table;
-        transition: opacity .3s ease;
-    }
-    .preview-wrapper {
-        display: table-cell;
-        vertical-align: middle;
-    }
-    .preview-container {
-        width: 400px;
-        height: 150px;
-        margin: 0px auto;
-        background-color: #fff;
-        border-radius: 2px;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
-        transition: all .3s ease;
-        font-family: Helvetica, Arial, sans-serif;
-        position: relative;
-    }
-    .confirm {
-        position: absolute;
-        right: 10px;
-        top: 0px;
-        font-size: 40px;
-    }
-    .confirm:hover {
-        color: red;
-        cursor: pointer;
-    }
-    .preview-body {
-        position: absolute;
-        width: 380px;
-        height: 130px;
-        margin: 10px 10px 10px 10px;
-    }
-    .preview-body > h4 {
-        position: absolute;
-        top: 25%;
-        left: 20%;
-    }
-    .preview-body > button {
-        position: absolute;
-        right: 10px;
-        bottom: 0px;
-    }
-    .green_color {
-        color: green;
-    }
-    .red_color {
-        color: red;
-    }
+.preview {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: table;
+  transition: opacity 0.3s ease;
+}
+.preview-wrapper {
+  display: table-cell;
+  vertical-align: middle;
+}
+.preview-container {
+  width: 400px;
+  height: 150px;
+  margin: 0px auto;
+  background-color: #fff;
+  border-radius: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.33);
+  transition: all 0.3s ease;
+  font-family: Helvetica, Arial, sans-serif;
+  position: relative;
+}
+.confirm {
+  position: absolute;
+  right: 10px;
+  top: 0px;
+  font-size: 40px;
+}
+.confirm:hover {
+  color: red;
+  cursor: pointer;
+}
+.preview-body {
+  position: absolute;
+  width: 380px;
+  height: 130px;
+  margin: 10px 10px 10px 10px;
+}
+.preview-body > h4 {
+  position: absolute;
+  top: 25%;
+  left: 20%;
+}
+.preview-body > button {
+  position: absolute;
+  right: 10px;
+  bottom: 0px;
+}
+.green_color {
+  color: green;
+}
+.red_color {
+  color: red;
+}
 </style>

@@ -77,4 +77,5 @@ stdout_logfile=/var/log/supervisor/WebRTC.log
 - 关键是两个文件：server.js 为消息分发的信令服务; 客户端首页面在 `src/view/Room.vue`
 - 如有任何疑问或者 bug，欢迎联系 `root@laravue.org`
 
+
 For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).

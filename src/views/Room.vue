@@ -56,80 +56,69 @@
 </template>
 
 <script>
-navigator.getUserMedia =
-  navigator.getUserMedia ||
-  navigator.mozGetUserMedia ||
-  navigator.webkitGetUserMedia;
-window.RTCPeerConnection =
-  window.RTCPeerConnection ||
-  window.mozRTCPeerConnection ||
-  window.webkitRTCPeerConnection;
-window.RTCIceCandidate =
-  window.RTCIceCandidate ||
-  window.mozRTCIceCandidate ||
-  window.webkitRTCIceCandidate;
+navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
+window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
+window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
 window.RTCSessionDescription =
-  window.RTCSessionDescription ||
-  window.mozRTCSessionDescription ||
-  window.webkitRTCSessionDescription;
+  window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
-const socket = io.connect("http://localhost:3000");
+const socket = io.connect('http://localhost:3000');
 var stream;
 var peerConn;
 var connectedUser = null;
 var configuration = {
   iceServers: [
     {
-      url: "turn:115.28.170.217:3478",
-      credential: "zmecust",
-      username: "zmecust"
-    }
-  ]
+      url: 'turn:115.28.170.217:3478',
+      credential: 'zmecust',
+      username: 'zmecust',
+    },
+  ],
 };
 
 export default {
   data() {
     return {
-      user_name: "",
+      user_name: '',
       show: true,
-      users: "",
-      call_username: "",
-      local_video: "",
-      remote_video: "",
-      accept_video: false
+      users: '',
+      call_username: '',
+      local_video: '',
+      remote_video: '',
+      accept_video: false,
     };
   },
   mounted() {
     socket.on(
-      "message",
+      'message',
       function(data) {
         console.log(data);
         switch (data.event) {
-          case "show":
+          case 'show':
             this.users = data.allUsers;
             break;
-          case "join":
+          case 'join':
             this.handleLogin(data);
             break;
-          case "call":
+          case 'call':
             this.handleCall(data);
             break;
-          case "accept":
+          case 'accept':
             this.handleAccept(data);
             break;
-          case "offer":
+          case 'offer':
             this.handleOffer(data);
             break;
-          case "candidate":
+          case 'candidate':
             this.handleCandidate(data);
             break;
-          case "msg":
+          case 'msg':
             this.handleMsg(data);
             break;
-          case "answer":
+          case 'answer':
             this.handleAnswer(data);
             break;
-          case "leave":
+          case 'leave':
             this.handleLeave();
             break;
           default:
@@ -140,10 +129,10 @@ export default {
   },
   methods: {
     submit() {
-      if (this.user_name != "") {
+      if (this.user_name != '') {
         this.send({
-          event: "join",
-          name: this.user_name
+          event: 'join',
+          name: this.user_name,
         });
       }
     },
@@ -155,7 +144,7 @@ export default {
     },
     handleLogin(data) {
       if (data.success === false) {
-        alert("Ooops...please try a different username");
+        alert('Ooops...please try a different username');
       } else {
         this.show = false;
         this.users = data.allUsers;
@@ -163,25 +152,6 @@ export default {
       }
     },
     initCreate() {
-      // navigator.mediaDevices
-      //   .getUserMedia({ audio: true, video: true })
-      //   .then(e => {
-      //     var video = document.getElementById("localVideo");
-      //     // 旧的浏览器可能没有srcObject
-      //     if ("srcObject" in video) {
-      //       video.srcObject = e;
-      //     } else {
-      //       // 防止再新的浏览器里使用它，应为它已经不再支持了
-      //       video.src = window.URL.createObjectURL(e);
-      //     }
-      //     stream = e;
-      //     video.onloadedmetadata = function(e) {
-      //       video.play();
-      //     };
-      //   })
-      //   .catch(err => {
-      //     console.log(err.name + ": " + err.message);
-      //   });
       const self = this;
       navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
       function gotStream(e) {
@@ -199,13 +169,13 @@ export default {
           connectedUser = this.call_username;
           this.createConnection();
           this.send({
-            event: "call"
+            event: 'call',
           });
         } else {
-          alert("The current user is calling, try another");
+          alert('The current user is calling, try another');
         }
       } else {
-        alert("Ooops...this username cannot be empty, please try again");
+        alert('Ooops...this username cannot be empty, please try again');
       }
     },
     createConnection() {
@@ -218,8 +188,8 @@ export default {
         setTimeout(() => {
           if (event.candidate) {
             this.send({
-              event: "candidate",
-              candidate: event.candidate
+              event: 'candidate',
+              candidate: event.candidate,
             });
           }
         });
@@ -231,15 +201,15 @@ export default {
     },
     reject() {
       this.send({
-        event: "accept",
-        accept: false
+        event: 'accept',
+        accept: false,
       });
       this.accept_video = false;
     },
     accept() {
       this.send({
-        event: "accept",
-        accept: true
+        event: 'accept',
+        accept: true,
       });
       this.accept_video = false;
     },
@@ -249,17 +219,17 @@ export default {
         peerConn.createOffer(
           offer => {
             this.send({
-              event: "offer",
-              offer: offer
+              event: 'offer',
+              offer: offer,
             });
             peerConn.setLocalDescription(offer);
           },
           error => {
-            alert("Error when creating an offer");
+            alert('Error when creating an offer');
           }
         );
       } else {
-        alert("对方已拒绝");
+        alert('对方已拒绝');
       }
     },
     handleOffer(data) {
@@ -271,12 +241,12 @@ export default {
         answer => {
           peerConn.setLocalDescription(answer);
           this.send({
-            event: "answer",
-            answer: answer
+            event: 'answer',
+            answer: answer,
           });
         },
         error => {
-          alert("Error when creating an answer");
+          alert('Error when creating an answer');
         }
       );
     },
@@ -292,25 +262,25 @@ export default {
     },
     hangUp() {
       this.send({
-        event: "leave"
+        event: 'leave',
       });
       this.handleLeave();
     },
     handleLeave() {
-      alert("通话已结束");
+      alert('通话已结束');
       connectedUser = null;
-      this.remote_video = "";
+      this.remote_video = '';
       peerConn.close();
       peerConn.onicecandidate = null;
       peerConn.onaddstream = null;
-      if (peerConn.signalingState == "closed") {
+      if (peerConn.signalingState == 'closed') {
         this.initCreate();
       }
     },
     closePreview() {
       this.accept_video = false;
-    }
-  }
+    },
+  },
 };
 </script>
 

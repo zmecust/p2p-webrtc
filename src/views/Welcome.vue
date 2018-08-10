@@ -37,40 +37,45 @@
 </template>
 
 <script>
-  const socket = io.connect('http://localhost:3000');
+const socket = io.connect('http://localhost:3000');
 
-  export default {
-    data() {
-      return {
-        room_name: '',
-        rooms: ''
-      }
-    },
-    created() {
-      socket.emit('message', JSON.stringify({
-          "event": "get_room_info",
-      }));
-    },
-    mounted() {
-      socket.on('message', function (data) {
+export default {
+  data() {
+    return {
+      room_name: '',
+      rooms: '',
+    };
+  },
+  created() {
+    socket.emit(
+      'message',
+      JSON.stringify({
+        event: 'get_room_info',
+      })
+    );
+  },
+  mounted() {
+    socket.on(
+      'message',
+      function(data) {
         var data = JSON.parse(data);
         switch (data.event) {
-          case "show":
+          case 'show':
             this.rooms = data.allUser;
             break;
           default:
             break;
         }
-      }.bind(this));
+      }.bind(this)
+    );
+  },
+  methods: {
+    submit() {
+      this.$router.push({ name: 'room', params: { room: this.room_name } });
     },
-    methods: {
-      submit() {
-        this.$router.push({name: 'room', params: {room: this.room_name}});
-      }
-    }
-  }
+  },
+};
 </script>
 
 <style>
-
 </style>

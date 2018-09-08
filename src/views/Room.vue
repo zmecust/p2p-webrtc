@@ -63,7 +63,7 @@ window.RTCSessionDescription =
   window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
 const socket = io.connect('http://localhost:3000');
-var stream;
+var localStream;
 var peerConn;
 var connectedUser = null;
 var configuration = {
@@ -157,7 +157,14 @@ export default {
       function gotStream(e) {
         //displaying local video stream on the page
         self.local_video = window.URL.createObjectURL(e);
-        stream = e;
+        // var audioTracks = e.getAudioTracks();
+        // // if MediaStream has reference to microphone
+        // if (audioTracks[0]) {
+        //   audioTracks[0].enabled = false;
+        // }
+        const vid = document.getElementById('localVideo');
+        vid.muted = true;
+        localStream = e;
       }
       function logError(error) {
         console.log(error);
@@ -180,7 +187,7 @@ export default {
     },
     createConnection() {
       peerConn = new RTCPeerConnection(configuration);
-      peerConn.addStream(stream);
+      peerConn.addStream(localStream);
       peerConn.onaddstream = e => {
         this.remote_video = window.URL.createObjectURL(e.stream);
       };

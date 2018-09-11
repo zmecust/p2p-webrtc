@@ -15,11 +15,16 @@
 
 - git clone
 - npm i
-- npm run dev  // 本地测试
-- npm run build  // 线上环境；
+- npm run build
 - node server.js
 
-## Nginx 反向代理
+## 本地部署
+
+- 安装完之后，chrome 或者 firefox 浏览器访问 `localhost:3000`
+
+## 线上部署
+
+- **Nginx 反向代理**
 
 线上环境修改 `Room.vue` 中的 `const socket = io.connect('https://yourdomain');`
 
@@ -49,7 +54,7 @@ server {
 }
 ```
 
-## Supervisor 守护进程
+- **Supervisor 守护进程**
 
 node 服务由 Supervisor 启动并维护，设置参数如下：
 
@@ -74,8 +79,5 @@ stdout_logfile=/var/log/supervisor/WebRTC.log
 
 ## 说明
 
-- 关键是两个文件：server.js 为消息分发的信令服务; 客户端首页面在 `src/view/Room.vue`
-- 如有任何疑问或者 bug，欢迎联系 `root@laravue.org`
-
-
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+- 线上部署需要先部署 stun 服务器，否则不同域之间不能通信
+- 如有任何疑问或者 bug，欢迎联系 `root@laravue.org` 或者 `247281377@qq.com`

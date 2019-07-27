@@ -18,21 +18,21 @@ console.log('The HTTPS server is up and running');
 var io = IO(server);
 console.log('Socket Secure server is up and running.');
 
-// 所有用户名单
+// All joined users
 var allUsers = {};
-// 所有客户端
+// All joined sockets
 var allSockets = {};
 
 io.on('connect', function(socket) {
-  var user = ''; //当前登录用户名
+  var user = ''; // current joined user
 
   socket.on('message', function(data) {
     var data = JSON.parse(data);
     switch (data.event) {
-      //当有新用户加入时
+      // When has new user join in
       case 'join':
         user = data.name;
-        //当昵称重复时
+        // Duplicated user name is not allowed
         if (allUsers[user]) {
           sendTo(socket, {
             event: 'join',
@@ -41,8 +41,8 @@ io.on('connect', function(socket) {
           });
         } else {
           console.log('User joined', data.name);
-          //保存用户信息
-          allUsers[user] = true; //true表示未通话，false表示正在通话
+          // Save users info
+          allUsers[user] = true; // 'true' means has not call, 'false' means calling 
           allSockets[user] = socket;
           socket.name = user;
           showUserInfo(allUsers);
@@ -63,14 +63,14 @@ io.on('connect', function(socket) {
         break;
 
       case 'offer':
-        //for example: UserA wants to call UserB
+        // i.e. UserA wants to call UserB
         console.log('Sending offer to: ', data.connectedUser);
         //if UserB exists then send him offer details
         var conn = allSockets[data.connectedUser];
         allUsers[user] = false;
         if (conn != null) {
           showUserInfo(allUsers);
-          //setting that UserA connected with UserB
+          // Setting that UserA connected with UserB
           socket.otherName = data.connectedUser;
           sendTo(conn, {
             event: 'offer',
@@ -105,7 +105,7 @@ io.on('connect', function(socket) {
 
       case 'answer':
         console.log('Sending answer to: ', data.connectedUser);
-        //for ex. UserB answers UserA
+        // i.e. UserB answers UserA
         var conn = allSockets[data.connectedUser];
         allUsers[user] = false;
         if (conn != null) {
@@ -141,7 +141,7 @@ io.on('connect', function(socket) {
         allUsers[socket.name] = true;
         allUsers[data.connectedUser] = true;
         socket.otherName = null;
-        //notify the other user so he can disconnect his peer connection
+        // Notify the other user so he can disconnect his peer connection
         if (conn != null) {
           showUserInfo(allUsers);
           sendTo(conn, {

@@ -163,7 +163,7 @@ export default {
     },
     addVideoURL(elementId, stream) {
       var video = document.getElementById(elementId);
-      // 旧的浏览器可能没有 srcObject
+      // Older brower may have no srcObject
       if ('srcObject' in video) {
         video.srcObject = stream;
       } else {
@@ -179,7 +179,7 @@ export default {
         navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
         function gotStream(e) {
           const vid = document.getElementById('localVideo');
-          //displaying local video stream on the page
+          // Displaying local video stream on the page
           vid.src = window.URL.createObjectURL(e);
           // Mute local audio
           vid.muted = true;
@@ -255,7 +255,7 @@ export default {
     },
     handleAccept(data) {
       if (data.accept) {
-        // create an offer
+        // Create an offer
         peerConn.createOffer(
           offer => {
             this.send({
@@ -276,7 +276,7 @@ export default {
       connectedUser = data.name;
       this.createConnection();
       peerConn.setRemoteDescription(new RTCSessionDescription(data.offer));
-      //create an answer to an offer
+      // Create an answer to an offer
       peerConn.createAnswer(
         answer => {
           peerConn.setLocalDescription(answer);
@@ -297,7 +297,7 @@ export default {
       peerConn.setRemoteDescription(new RTCSessionDescription(data.answer));
     },
     handleCandidate(data) {
-      //ClientB通过PeerConnection的AddIceCandidate方法保存起来
+      // ClientB 通过 PeerConnection 的 AddIceCandidate 方法保存起来
       peerConn.addIceCandidate(new RTCIceCandidate(data.candidate));
     },
     hangUp() {

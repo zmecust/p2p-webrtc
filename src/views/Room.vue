@@ -1,80 +1,91 @@
 <template>
-    <div>
-        <div class="container text-center" v-show="show">
-            <div class="row">
-                <div class="col-md-4 col-md-offset-4">
-                    <form class="form" action="" @submit.prevent="submit()">
-                        <h2>WebRTC Video Demo. Please Sign In</h2><br/>
-                        <input class="form-control" type="text" placeholder="请输入您的昵称"
-                               required="" autofocus="" v-model="user_name"><br/>
-                        <button class="btn btn-primary btn-block" type="submit">创建昵称</button>
-                    </form>
-                </div>
-            </div>
+  <div>
+    <div class="container text-center" v-show="show">
+      <div class="row">
+        <div class="col-md-4 col-md-offset-4">
+          <form class="form" action @submit.prevent="submit()">
+            <h2>WebRTC Video Demo. Please Sign In</h2>
+            <br>
+            <input
+              class="form-control"
+              type="text"
+              placeholder="请输入您的昵称"
+              required
+              autofocus
+              v-model="user_name"
+            >
+            <br>
+            <button class="btn btn-primary btn-block" type="submit">创建昵称</button>
+          </form>
         </div>
-        <div class="container text-center" v-show="! show">
-            <div class="row">
-                <div class="col-md-3" style="height: 50%">
-                    <ul class="list-group">
-                        <li class="list-group-item">昵称: {{user_name}}</li>
-                        <li class="list-group-item">当前在线人数: {{Object.getOwnPropertyNames(users).length - 1}}</li>
-                        <li class="list-group-item">在线用户:
-                            <div v-for="(user, index) in users">
-                                <br><span>{{index}}</span>
-                                <span :class="[user ? 'green_color' : 'red_color']">{{user ? '(在线)' : '(正在通话)'}}</span>
-                            </div>
-                        </li>
-                    </ul>
-                    <div class="row text-center">
-                        <div class="col-md-12">
-                            <input class="form-control" type="text" v-model="call_username" placeholder="username to call"/>
-                            <br>
-                            <button class="btn-success btn" :disabled="!users[user_name]" @click="call">Call</button>
-                            <button class="btn-danger btn" :disabled="users[user_name]" @click="hangUp">Hang Up</button>
-                        </div>
-                    </div>
-                </div>
-                <div class="col-md-9">
-                    <video id="localVideo" :src="local_video" autoplay></video>
-                    <video id="remoteVideo" :src="remote_video" autoplay></video>
-                </div>
-            </div>
-        </div>
-        <div class="preview" v-show="accept_video">
-            <div class="preview-wrapper">
-                <div class="preview-container">
-                    <div class="preview-body">
-                        <h4>您有视频邀请，是否接受?</h4>
-                        <button class="btn-success btn" @click="accept">接受</button>
-                        <button class="btn-danger btn" style="margin-right: 70px" @click="reject">拒绝</button>
-                    </div>
-                    <div class="confirm" @click="closePreview">×</div>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
+    <div class="container text-center" v-show="!show">
+      <div class="row">
+        <div class="col-md-3" style="height: 50%">
+          <ul class="list-group">
+            <li class="list-group-item">昵称: {{ user_name }}</li>
+            <li class="list-group-item">当前在线人数: {{ Object.getOwnPropertyNames(users).length - 1 }}</li>
+            <li class="list-group-item">
+              在线用户:
+              <div v-for="(user, index) in users" :key="index">
+                <br>
+                <span>{{ index }}</span>
+                <span :class="[user ? 'green_color' : 'red_color']">{{ user ? '(在线)' : '(正在通话)' }}</span>
+              </div>
+            </li>
+          </ul>
+          <div class="row text-center">
+            <div class="col-md-12">
+              <input
+                class="form-control"
+                type="text"
+                v-model="call_username"
+                placeholder="username to call"
+              >
+              <br>
+              <button class="btn-success btn" :disabled="!users[user_name]" @click="call">Call</button>
+              <button class="btn-danger btn" :disabled="users[user_name]" @click="hangUp">Hang Up</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-9">
+          <video id="localVideo" autoplay></video>
+          <video id="remoteVideo" :src="remote_video" autoplay></video>
+        </div>
+      </div>
+    </div>
+    <div class="preview" v-show="accept_video">
+      <div class="preview-wrapper">
+        <div class="preview-container">
+          <div class="preview-body">
+            <h4>您有视频邀请，是否接受?</h4>
+            <button class="btn-success btn" @click="accept">接受</button>
+            <button class="btn-danger btn" style="margin-right: 70px" @click="reject">拒绝</button>
+          </div>
+          <div class="confirm" @click="closePreview">×</div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
+import * as config from '../../config';
+
 navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
 window.RTCIceCandidate = window.RTCIceCandidate || window.mozRTCIceCandidate || window.webkitRTCIceCandidate;
 window.RTCSessionDescription =
   window.RTCSessionDescription || window.mozRTCSessionDescription || window.webkitRTCSessionDescription;
 
-const socket = io.connect('http://localhost:3000');
-var localStream;
-var peerConn;
-var connectedUser = null;
-var configuration = {
-  iceServers: [
-    {
-      url: 'turn:115.28.170.217:3478',
-      credential: 'zmecust',
-      username: 'zmecust',
-    },
-  ],
+const socket = io.connect(config.API_ROOT);
+const configuration = {
+  iceServers: [config.DEFAULT_ICE_SERVER],
 };
+
+let localStream, peerConn;
+let connectedUser = null;
 
 export default {
   data() {
@@ -83,7 +94,6 @@ export default {
       show: true,
       users: '',
       call_username: '',
-      local_video: '',
       remote_video: '',
       accept_video: false,
     };
@@ -129,7 +139,7 @@ export default {
   },
   methods: {
     submit() {
-      if (this.user_name != '') {
+      if (this.user_name !== '') {
         this.send({
           event: 'join',
           name: this.user_name,
@@ -137,7 +147,7 @@ export default {
       }
     },
     send(message) {
-      if (connectedUser != null) {
+      if (connectedUser !== null) {
         message.connectedUser = connectedUser;
       }
       socket.send(JSON.stringify(message));
@@ -151,23 +161,46 @@ export default {
         this.initCreate();
       }
     },
+    addVideoURL(elementId, stream) {
+      var video = document.getElementById(elementId);
+      // 旧的浏览器可能没有 srcObject
+      if ('srcObject' in video) {
+        video.srcObject = stream;
+      } else {
+        // 防止在新的浏览器里使用它，应为它已经不再支持了
+        video.src = window.URL.createObjectURL(stream);
+      }
+    },
     initCreate() {
       const self = this;
-      navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
-      function gotStream(e) {
-        //displaying local video stream on the page
-        self.local_video = window.URL.createObjectURL(e);
-        // var audioTracks = e.getAudioTracks();
-        // // if MediaStream has reference to microphone
-        // if (audioTracks[0]) {
-        //   audioTracks[0].enabled = false;
-        // }
-        const vid = document.getElementById('localVideo');
-        vid.muted = true;
-        localStream = e;
-      }
-      function logError(error) {
-        console.log(error);
+
+      // Old WebRTC API
+      if (navigator.getUserMedia) {
+        navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
+        function gotStream(e) {
+          const vid = document.getElementById('localVideo');
+          //displaying local video stream on the page
+          vid.src = window.URL.createObjectURL(e);
+          // Mute local audio
+          vid.muted = true;
+          localStream = e;
+        }
+        function logError(error) {
+          console.log(error);
+        }
+      } else {
+        // New webrtc API
+        navigator.mediaDevices
+          .getUserMedia({ audio: true, video: true })
+          .then(function(stream) {
+            var video = document.getElementById('localVideo');
+            self.addVideoURL('localVideo', stream);
+            video.muted = true;
+            localStream = stream;
+          })
+          .catch(function(err) {
+            console.log(err.name + ': ' + err.message);
+          });
       }
     },
     call() {
@@ -189,7 +222,7 @@ export default {
       peerConn = new RTCPeerConnection(configuration);
       peerConn.addStream(localStream);
       peerConn.onaddstream = e => {
-        this.remote_video = window.URL.createObjectURL(e.stream);
+        this.addVideoURL('remoteVideo', e.stream);
       };
       peerConn.onicecandidate = event => {
         setTimeout(() => {
@@ -280,7 +313,7 @@ export default {
       peerConn.close();
       peerConn.onicecandidate = null;
       peerConn.onaddstream = null;
-      if (peerConn.signalingState == 'closed') {
+      if (peerConn.signalingState === 'closed') {
         this.initCreate();
       }
     },

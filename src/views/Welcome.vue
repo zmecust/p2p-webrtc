@@ -21,9 +21,9 @@
                     </tr>
                     </thead>
                     <tbody>
-                    <tr v-for="(room, index) in rooms">
+                    <tr v-for="(room, index) in rooms" :key="index">
                         <td>
-                            <router-link :to="{name: 'room', params: {room: index}}">
+                            <router-link :to="{ name: 'room', params: { room: index } }">
                                 {{ index }}
                             </router-link>
                         </td>
@@ -37,7 +37,9 @@
 </template>
 
 <script>
-const socket = io.connect('http://localhost:3000');
+import * as config from '../../config';
+
+const socket = io.connect(config.API_ROOT);
 
 export default {
   data() {
@@ -58,10 +60,10 @@ export default {
     socket.on(
       'message',
       function(data) {
-        var data = JSON.parse(data);
-        switch (data.event) {
+        const parseData = JSON.parse(data);
+        switch (parseData.event) {
           case 'show':
-            this.rooms = data.allUser;
+            this.rooms = parseData.allUser;
             break;
           default:
             break;

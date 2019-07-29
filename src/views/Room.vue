@@ -5,7 +5,7 @@
         <div class="col-md-4 col-md-offset-4">
           <form class="form" action @submit.prevent="submit()">
             <h2>WebRTC Video Demo. Please Sign In</h2>
-            <br>
+            <br />
             <input
               class="form-control"
               type="text"
@@ -13,8 +13,8 @@
               required
               autofocus
               v-model="user_name"
-            >
-            <br>
+            />
+            <br />
             <button class="btn btn-primary btn-block" type="submit">创建昵称</button>
           </form>
         </div>
@@ -29,7 +29,7 @@
             <li class="list-group-item">
               在线用户:
               <div v-for="(user, index) in users" :key="index">
-                <br>
+                <br />
                 <span>{{ index }}</span>
                 <span :class="[user ? 'green_color' : 'red_color']">{{ user ? '(在线)' : '(正在通话)' }}</span>
               </div>
@@ -42,8 +42,8 @@
                 type="text"
                 v-model="call_username"
                 placeholder="username to call"
-              >
-              <br>
+              />
+              <br />
               <button class="btn-success btn" :disabled="!users[user_name]" @click="call">Call</button>
               <button class="btn-danger btn" :disabled="users[user_name]" @click="hangUp">Hang Up</button>
             </div>
@@ -71,7 +71,7 @@
 </template>
 
 <script>
-import * as config from '../../config';
+import * as config from '../../configure';
 
 navigator.getUserMedia = navigator.getUserMedia || navigator.mozGetUserMedia || navigator.webkitGetUserMedia;
 window.RTCPeerConnection = window.RTCPeerConnection || window.mozRTCPeerConnection || window.webkitRTCPeerConnection;
@@ -173,35 +173,17 @@ export default {
     },
     initCreate() {
       const self = this;
-
-      // Old WebRTC API
-      if (navigator.getUserMedia) {
-        navigator.getUserMedia({ video: true, audio: true }, gotStream, logError);
-        function gotStream(e) {
-          const vid = document.getElementById('localVideo');
-          // Displaying local video stream on the page
-          vid.src = window.URL.createObjectURL(e);
-          // Mute local audio
-          vid.muted = true;
-          localStream = e;
-        }
-        function logError(error) {
-          console.log(error);
-        }
-      } else {
-        // New webrtc API
-        navigator.mediaDevices
-          .getUserMedia({ audio: true, video: true })
-          .then(function(stream) {
-            var video = document.getElementById('localVideo');
-            self.addVideoURL('localVideo', stream);
-            video.muted = true;
-            localStream = stream;
-          })
-          .catch(function(err) {
-            console.log(err.name + ': ' + err.message);
-          });
-      }
+      navigator.mediaDevices
+        .getUserMedia({ audio: true, video: true })
+        .then(function(stream) {
+          var video = document.getElementById('localVideo');
+          self.addVideoURL('localVideo', stream);
+          video.muted = true;
+          localStream = stream;
+        })
+        .catch(function(err) {
+          console.log(err.name + ': ' + err.message);
+        });
     },
     call() {
       if (this.call_username.length > 0) {

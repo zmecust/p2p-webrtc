@@ -3,6 +3,7 @@ var app = express();
 var http = require('http');
 var fs = require('fs');
 var IO = require('socket.io');
+var { API_PORT } = require('./configure');
 
 /*var options = {
   key: fs.readFileSync('./ssl/key.pem'),
@@ -12,7 +13,7 @@ var IO = require('socket.io');
 
 app.use(express.static('dist'));
 
-var server = http.createServer(app).listen(3000);
+var server = http.createServer(app).listen(API_PORT);
 console.log('The HTTPS server is up and running');
 
 var io = IO(server);
@@ -42,7 +43,7 @@ io.on('connect', function(socket) {
         } else {
           console.log('User joined', data.name);
           // Save users info
-          allUsers[user] = true; // 'true' means has not call, 'false' means calling 
+          allUsers[user] = true; // 'true' means has not call, 'false' means calling
           allSockets[user] = socket;
           socket.name = user;
           showUserInfo(allUsers);

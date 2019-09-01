@@ -56,9 +56,14 @@ server {
 
 - **pm2 or forever 守护进程**
 
-- npm i -g pm2
-- pm2 start server.js
+```
+npm i -g pm2
+pm2 start server.js
 
+OR
+npm i -g forever
+forever start server.js
+```
 
 ## 说明
 

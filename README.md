@@ -1,4 +1,4 @@
-# vue-webrtc
+# p2p-webrtc
 
 > A Vue.js project about video communication
 
@@ -54,28 +54,11 @@ server {
 }
 ```
 
-- **Supervisor 守护进程**
+- **pm2 or forever 守护进程**
 
-node 服务由 Supervisor 启动并维护，设置参数如下：
+- npm i -g pm2
+- pm2 start server.js
 
-```
-[program:WebRTC]
-process_name=%(program_name)s
-command=node /var/www/html/p2p-webrtc/server.js --daemon  # node 服务所在地址
-autostart=true
-autorestart=true
-user=root
-numprocs=1
-redirect_stderr=false
-stdout_logfile=/var/log/supervisor/WebRTC.log
-```
-如果启动失败，可能需要执行：`unlink /run/supervisor.sock`
-
-对应的需要修改 server.js 的 `app.use(express.static('/var/www/html/p2p-webrtc/dist'));` //客户端所在地址，修改成绝对路径，否则会报 404 错误
-
-- supervisord -c /etc/supervisor/supervisord.conf //起服务，注意 supervisor 配置文件所在目录
-- supervisord shutdown //关闭服务 
-- supervisord reload //重启服务 
 
 ## 说明
 

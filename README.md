@@ -61,11 +61,12 @@ npm i -g pm2
 pm2 start server.js
 
 OR
+
 npm i -g forever
 forever start server.js
 ```
 
 ## 说明
 
-- 线上部署需要先部署 stun 服务器，否则不同域之间不能通信
+- 线上部署需要先部署 stun 服务器，否则不同域之间不能通信，部署参考：[https://laravue.org/#/articles/33](https://laravue.org/#/articles/33)
 - 如有任何疑问或者 bug，欢迎联系 `root@laravue.org` 或者 `247281377@qq.com`

@@ -13,7 +13,7 @@
     "fs": "0.0.1-security",
     "https": "^1.0.0",
     "redis": "^2.7.1",
-    "socket.io": "^2.0.3",
+    "socket.io": "^2.4.0",
     "uglify-js": "^3.6.0",
     "vue": "^2.3.3",
     "vue-router": "^2.6.0",
